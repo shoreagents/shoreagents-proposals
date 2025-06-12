@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Add polyfills for Node.js modules required by Plotly.js
     if (!isServer) {
       config.resolve.fallback = {
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
 
       // Provide global Buffer for browser environment
       config.plugins.push(
-        new config.webpack.ProvidePlugin({
+        new webpack.ProvidePlugin({
           Buffer: ['buffer', 'Buffer'],
           process: 'process/browser',
         })
