@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShoreAgents Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: none;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 300;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #f0f0f0;
+        }
+
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 15px;
+        }
+
+        .chart-stats {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #7EAC0B;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .filters-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-button {
+            padding: 10px 20px;
+            border: 2px solid #7EAC0B;
+            background: white;
+            color: #7EAC0B;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-button:hover, .filter-button.active {
+            background: #7EAC0B;
+            color: white;
+        }
+
+        .wide-chart {
+            grid-column: 1 / -1;
+        }
+
+        .wide-chart .chart-container {
+            height: 400px;
+        }
+
+        .metric-highlight {
+            background: linear-gradient(45deg, #7EAC0B, #97BC34);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-title {
+                font-size: 2rem;
+            }
+            
+            .filters-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">ShoreAgents Analytics Dashboard</h1>
+            <p class="dashboard-subtitle">Real Estate Virtual Assistant Performance Metrics</p>
+        </div>
+
+        <div id="loading" class="loading-message">Loading charts...</div>
+
+        <div class="charts-grid" style="display: none;" id="chartsContainer">
+            <!-- Revenue Growth Chart -->
+            <div class="chart-card wide-chart">
+                <h3 class="chart-title">📈 Monthly Revenue Growth</h3>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">$2.4M</div>
+                        <div class="stat-label">Annual Revenue</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">+73%</div>
+                        <div class="stat-label">YoY Growth</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">$200K</div>
+                        <div class="stat-label">Monthly Average</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Performance -->
+            <div class="chart-card">
+                <h3 class="chart-title">🎯 Service Revenue Breakdown</h3>
+                <div class="chart-container">
+                    <canvas id="serviceChart"></canvas>
+                </div>
+                <div class="metric-highlight">
+                    <strong>Top Service:</strong> Real Estate VAs (42% of revenue)
+                </div>
+            </div>
+
+            <!-- Client Satisfaction -->
+            <div class="chart-card">
+                <h3 class="chart-title">⭐ Client Satisfaction Scores</h3>
+                <div class="chart-container">
+                    <canvas id="satisfactionChart"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">9.2/10</div>
+                        <div class="stat-label">Average Rating</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">98%</div>
+                        <div class="stat-label">Retention Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geographic Distribution -->
+            <div class="chart-card">
+                <h3 class="chart-title">🌍 Client Geographic Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="geoChart"></canvas>
+                </div>
+            </div>
+
+            <!-- ROI Comparison -->
+            <div class="chart-card">
+                <h3 class="chart-title">💰 Before vs After VA Implementation</h3>
+                <div class="chart-container">
+                    <canvas id="roiChart"></canvas>
+                </div>
+                <div class="metric-highlight">
+                    <strong>Average ROI:</strong> 340% improvement in efficiency
+                </div>
+            </div>
+
+            <!-- Task Completion Metrics -->
+            <div class="chart-card">
+                <h3 class="chart-title">⚡ Task Completion Performance</h3>
+                <div class="chart-container">
+                    <canvas id="taskChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let chartInstances = {};
+        
+        // Color palette
+        const colors = {
+            primary: '#7EAC0B',
+            secondary: '#97BC34',
+            accent: '#667eea',
+            success: '#28a745',
+            warning: '#ffc107',
+            danger: '#dc3545',
+            info: '#17a2b8'
+        };
+
+        // Wait for Chart.js to load
+        function waitForChart() {
+            return new Promise((resolve) => {
+                if (typeof Chart !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(() => waitForChart().then(resolve), 100);
+                }
+            });
+        }
+
+        // Initialize all charts
+        async function initializeCharts() {
+            try {
+                await waitForChart();
+                
+                console.log('Chart.js loaded successfully');
+                
+                // Destroy existing charts if they exist
+                Object.values(chartInstances).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                chartInstances = {};
+                
+                // Hide loading message and show charts
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('chartsContainer').style.display = 'grid';
+
+                // 1. Revenue Growth Line Chart
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                chartInstances.revenue = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Monthly Revenue ($K)',
+                            data: [145, 168, 192, 215, 187, 234, 198, 256, 289, 312, 334, 289],
+                            borderColor: colors.primary,
+                            backgroundColor: colors.primary + '30',
+                            borderWidth: 4,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: colors.primary,
+                            pointBorderColor: 'white',
+                            pointBorderWidth: 3,
+                            pointRadius: 6
+                        }, {
+                            label: 'Target Revenue ($K)',
+                            data: [150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260],
+                            borderColor: colors.accent,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 4,
+                            pointBackgroundColor: colors.accent
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': $' + context.parsed.y + 'K';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value + 'K';
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(0,0,0,0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 2. Service Revenue Doughnut Chart
+                const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+                chartInstances.service = new Chart(serviceCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Real Estate VAs', 'Property Management', 'Admin Support', 'Marketing VAs', 'Tech Support'],
+                        datasets: [{
+                            data: [42, 28, 15, 10, 5],
+                            backgroundColor: [
+                                colors.primary,
+                                colors.secondary,
+                                colors.accent,
+                                colors.info,
+                                colors.warning
+                            ],
+                            borderWidth: 0,
+                            hoverBorderWidth: 4,
+                            hoverBorderColor: 'white'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.parsed + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 3. Client Satisfaction Bar Chart
+                const satisfactionCtx = document.getElementById('satisfactionChart').getContext('2d');
+                chartInstances.satisfaction = new Chart(satisfactionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Communication', 'Quality', 'Timeliness', 'Problem Solving', 'Overall'],
+                        datasets: [{
+                            label: 'Satisfaction Score',
+                            data: [9.4, 9.1, 9.3, 8.9, 9.2],
+                            backgroundColor: [
+                                colors.primary + '80',
+                                colors.secondary + '80',
+                                colors.accent + '80',
+                                colors.success + '80',
+                                colors.info + '80'
+                            ],
+                            borderColor: [
+                                colors.primary,
+                                colors.secondary,
+                                colors.accent,
+                                colors.success,
+                                colors.info
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Score: ' + context.parsed.y + '/10';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 10,
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '/10';
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 4. Geographic Distribution Pie Chart
+                const geoCtx = document.getElementById('geoChart').getContext('2d');
+                chartInstances.geo = new Chart(geoCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['USA', 'Australia', 'Canada', 'UK', 'New Zealand'],
+                        datasets: [{
+                            data: [45, 32, 12, 8, 3],
+                            backgroundColor: [
+                                colors.primary,
+                                colors.secondary,
+                                colors.accent,
+                                colors.info,
+                                colors.warning
+                            ],
+                            borderWidth: 2,
+                            borderColor: 'white'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.parsed + '% of clients';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 5. ROI Comparison Horizontal Bar Chart
+                const roiCtx = document.getElementById('roiChart').getContext('2d');
+                chartInstances.roi = new Chart(roiCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Response Time (hrs)', 'Cost per Task ($)', 'Tasks per Day', 'Satisfaction (/10)', 'Revenue per Agent ($K)'],
+                        datasets: [{
+                            label: 'Before VA',
+                            data: [4.2, 45, 8, 6.8, 12],
+                            backgroundColor: colors.danger + '70',
+                            borderColor: colors.danger,
+                            borderWidth: 1
+                        }, {
+                            label: 'After VA',
+                            data: [0.5, 12, 24, 9.2, 28],
+                            backgroundColor: colors.primary + '70',
+                            borderColor: colors.primary,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 6. Task Completion Line Chart
+                const taskCtx = document.getElementById('taskChart').getContext('2d');
+                chartInstances.task = new Chart(taskCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
+                        datasets: [{
+                            label: 'Tasks Completed',
+                            data: [234, 267, 289, 312, 298, 334, 356, 378],
+                            borderColor: colors.primary,
+                            backgroundColor: colors.primary + '30',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: colors.primary,
+                            pointRadius: 5
+                        }, {
+                            label: 'Tasks Assigned',
+                            data: [240, 270, 295, 315, 305, 340, 360, 385],
+                            borderColor: colors.accent,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 3,
+                            pointBackgroundColor: colors.accent
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0,0,0,0.1)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(0,0,0,0.05)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                console.log('All charts initialized successfully');
+
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+                document.getElementById('loading').innerHTML = 'Error loading charts. Please refresh the page.';
+            }
+        }
+
+        // Filter functionality
+        function updatePeriod(buttonElement, period) {
+            // Remove active class from all buttons
+            document.querySelectorAll('.filter-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            buttonElement.classList.add('active');
+            
+            // Add animation effect
+            document.querySelectorAll('.chart-card').forEach(card => {
+                card.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    card.style.transform = 'scale(1)';
+                }, 150);
+            });
+            
+            console.log(`Dashboard updated for period: ${period}`);
+        }
+
+        // Initialize when page loads
+        let chartsInitialized = false;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!chartsInitialized) {
+                console.log('DOM loaded, initializing charts...');
+                chartsInitialized = true;
+                initializeCharts();
+            }
+        });
+
+        // Backup initialization in case DOMContentLoaded already fired
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                if (!chartsInitialized) {
+                    chartsInitialized = true;
+                    initializeCharts();
+                }
+            });
+        } else if (!chartsInitialized) {
+            chartsInitialized = true;
+            initializeCharts();
+        }
+    </script>
+</body>
+</html>
