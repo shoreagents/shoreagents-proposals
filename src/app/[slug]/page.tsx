@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React from "react";
 import HtmlRenderer from "@/components/HtmlRenderer";
 import ReactRenderer from "@/components/ReactRenderer";
@@ -10,6 +10,18 @@ interface ComponentPageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+interface ComponentData {
+  content: string;
+  metadata?: {
+    title?: string;
+  };
+}
+
+interface Component {
+  filename: string;
+  customUrl?: string;
 }
 
 export default function ComponentPage({ params }: ComponentPageProps) {
@@ -28,7 +40,7 @@ export default function ComponentPage({ params }: ComponentPageProps) {
       try {
         setIsLoading(true);
         setError(null);
-        let components: any[] = [];
+        let components: Component[] = [];
 
         // Try to find the component by custom URL or filename
         const componentsResponse = await fetch("/api/components");
@@ -36,20 +48,20 @@ export default function ComponentPage({ params }: ComponentPageProps) {
           const response = await componentsResponse.json();
           components = response.components;
           // Try customUrl first
-          let component = components.find((c: any) => c.customUrl === requestedUrl);
+          let component = components.find((c: Component) => c.customUrl === requestedUrl);
           if (component) {
             setActualFilename(component.filename);
             const response = await fetch(`/api/components/${component.filename}`);
             if (!response.ok) {
               throw new Error("Failed to load component");
             }
-            const data = await response.json();
+            const data: ComponentData = await response.json();
             setComponentContent(data.content);
             setComponentName(data.metadata?.title || component.filename);
             return;
           }
           // Try filename
-          component = components.find((c: any) => c.filename === requestedUrl);
+          component = components.find((c: Component) => c.filename === requestedUrl);
           if (component) {
             if (component.customUrl) {
               setRedirecting(true);
@@ -61,7 +73,7 @@ export default function ComponentPage({ params }: ComponentPageProps) {
             if (!response.ok) {
               throw new Error("Failed to load component");
             }
-            const data = await response.json();
+            const data: ComponentData = await response.json();
             setComponentContent(data.content);
             setComponentName(data.metadata?.title || component.filename);
             return;

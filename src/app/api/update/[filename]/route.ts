@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabaseClient';
 import { updateProposal } from '@/lib/proposalsApi';
 
-export async function PUT(req: NextRequest, { params }: { params: { filename: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ filename: string }> }) {
   try {
-    const { filename } = params;
+    const resolvedParams = await params;
+    const { filename } = resolvedParams;
 
     // Parse form data
     const formData = await req.formData();

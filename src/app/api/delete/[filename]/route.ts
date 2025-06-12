@@ -4,10 +4,11 @@ import { deleteProposal } from '@/lib/proposalsApi';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const resolvedParams = await params;
+    const filename = resolvedParams.filename;
 
     // Find the proposal in the database
     const { data: proposal, error: dbError } = await supabase
@@ -46,10 +47,11 @@ export async function DELETE(
         filename: filename
       });
 
-    } catch (deleteError: any) {
+    } catch (deleteError: unknown) {
       console.error('Database deletion error:', deleteError);
+      const errorMessage = deleteError instanceof Error ? deleteError.message : 'Unknown error';
       return NextResponse.json(
-        { message: 'Failed to delete from database', error: deleteError.message },
+        { message: 'Failed to delete from database', error: errorMessage },
         { status: 500 }
       );
     }

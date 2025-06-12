@@ -1,15 +1,31 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ReactRenderer from '@/components/ReactRenderer';
 import HtmlRenderer from '@/components/HtmlRenderer';
 import React from 'react';
+import Link from 'next/link';
 
 interface PreviewPageProps {
   params: Promise<{
     filename: string;
   }>;
+}
+
+interface Component {
+  customUrl?: string;
+  filename: string;
+  uploadDate: string;
+}
+
+interface ComponentData {
+  content: string;
+  metadata?: {
+    title?: string;
+    uploadDate?: string;
+    customUrl?: string;
+  };
 }
 
 export default function PreviewPage({ params }: PreviewPageProps) {
@@ -32,13 +48,13 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     const loadComponent = async () => {
       try {
         setIsLoading(true);
-        let components: any[] = [];
+        let components: Component[] = [];
         // First try to find the component by custom URL
         const componentsResponse = await fetch('/api/components');
         if (componentsResponse.ok) {
           const response = await componentsResponse.json();
           components = response.components;
-          const component = components.find((c: any) => c.customUrl === requestedUrl);
+          const component = components.find((c: Component) => c.customUrl === requestedUrl);
           if (component) {
             // If found by custom URL, redirect to the filename
             setRedirecting(true);
@@ -47,16 +63,16 @@ export default function PreviewPage({ params }: PreviewPageProps) {
           }
         }
         // If not found by custom URL, try as filename
-        const componentByFilename = components.find((c: any) => c.filename === requestedUrl);
+        const componentByFilename = components.find((c: Component) => c.filename === requestedUrl);
         if (componentByFilename) {
           setActualFilename(requestedUrl);
           setUploadDate(componentByFilename.uploadDate);
-          setCustomUrl(componentByFilename.customUrl);
+          setCustomUrl(componentByFilename.customUrl || '');
           const response = await fetch(`/api/components/${requestedUrl}`);
           if (!response.ok) {
             throw new Error('File not found');
           }
-          const data = await response.json();
+          const data: ComponentData = await response.json();
           setFileContent(data.content);
           setFileType(requestedUrl.endsWith('.html') ? 'html' : 'react');
           if (data.metadata?.title) {
@@ -80,7 +96,8 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     loadComponent();
   }, [requestedUrl, router]);
 
-  const handleDelete = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete "${actualFilename}"? This action cannot be undone.`)) {
       return;
     }
@@ -97,7 +114,8 @@ export default function PreviewPage({ params }: PreviewPageProps) {
         const error = await response.json();
         alert(`Delete failed: ${error.message}`);
       }
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       alert('Delete failed: Network error');
     }
   };
@@ -205,12 +223,12 @@ export default function PreviewPage({ params }: PreviewPageProps) {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
-          <a
+          <Link
             href="/"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
           >
             ← Back to Proposals
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -233,12 +251,12 @@ export default function PreviewPage({ params }: PreviewPageProps) {
               </p>
             </div>
             <div className="flex space-x-2">
-              <a
+              <Link
                 href="/"
                 className="text-gray-600 px-4 py-2 rounded-md hover:text-gray-800 transition-colors font-semibold"
               >
                 ← Back to Proposals
-              </a>
+              </Link>
             </div>
           </div>
         </div>

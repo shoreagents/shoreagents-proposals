@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
     const storagePath = `react/${filename}`;
 
     // Upload file to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('proposals')
       .upload(storagePath, buffer, {
         contentType: 'text/plain',
@@ -246,15 +246,16 @@ export async function POST(request: NextRequest) {
         fileUrl: urlData.publicUrl
       });
 
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       // If database insert fails, clean up the uploaded file
       await supabase.storage
         .from('proposals')
         .remove([storagePath]);
 
       console.error('Database error:', dbError);
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown error';
       return NextResponse.json(
-        { message: 'Failed to save proposal to database', error: dbError.message },
+        { message: 'Failed to save proposal to database', error: errorMessage },
         { status: 500 }
       );
     }

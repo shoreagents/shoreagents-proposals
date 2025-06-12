@@ -34,7 +34,8 @@ const HtmlRenderer: React.FC<HtmlRendererProps> = ({
   uploadDate,
   customUrl,
   mode = 'preview',
-  showLoadingText = true,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  showLoadingText: _showLoadingText = true,
   features = {
     showProposalDetails: true,
     showDelete: true,
@@ -58,12 +59,13 @@ const HtmlRenderer: React.FC<HtmlRendererProps> = ({
   const [updateInputMethod, setUpdateInputMethod] = useState<'file' | 'code'>('code');
   const [updateCodeContent, setUpdateCodeContent] = useState(code);
   const [updateSelectedFile, setUpdateSelectedFile] = useState<File | null>(null);
-  const [updateErrors, setUpdateErrors] = useState<any>({});
+  const [updateErrors, setUpdateErrors] = useState<Record<string, string | undefined>>({});
   const [isUpdating, setIsUpdating] = useState(false);
   const updateFileInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const [showMethodChangeWarning, setShowMethodChangeWarning] = useState(false);
   const [pendingMethodChange, setPendingMethodChange] = useState<'file' | 'code' | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isDragActive, setIsDragActive] = useState(false);
 
   useEffect(() => {
@@ -245,7 +247,7 @@ const HtmlRenderer: React.FC<HtmlRendererProps> = ({
             {/* Modal Body */}
             <div className="p-6">
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete <span className="font-medium text-gray-800">"{title}"</span>? This action cannot be undone.
+                Are you sure you want to delete <span className="font-medium text-gray-800">&quot;{title}&quot;</span>? This action cannot be undone.
               </p>
               <div className="flex justify-center space-x-3">
                 <button

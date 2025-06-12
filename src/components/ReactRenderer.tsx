@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Eye, EyeOff, Download, Code, Code2, Trash2, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -79,7 +79,8 @@ export default function ReactRenderer({
   uploadDate,
   customUrl,
   mode = 'preview',
-  showLoadingText = true,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  showLoadingText: _showLoadingText = true,
   features = {
     showProposalDetails: true,
     showDelete: true,
@@ -103,18 +104,20 @@ export default function ReactRenderer({
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const router = useRouter();
   const previewRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isLoading, _setIsLoading] = useState(true);
   const [updateTitle, setUpdateTitle] = useState(componentTitle || title);
   const [updateCustomUrl, setUpdateCustomUrl] = useState(customUrl || '');
   const [updateInputMethod, setUpdateInputMethod] = useState<'file' | 'code'>('code');
   const [updateCodeContent, setUpdateCodeContent] = useState(code);
   const [updateSelectedFile, setUpdateSelectedFile] = useState<File | null>(null);
-  const [updateErrors, setUpdateErrors] = useState<any>({});
+  const [updateErrors, setUpdateErrors] = useState<Record<string, string | undefined>>({});
   const [isUpdating, setIsUpdating] = useState(false);
   const updateFileInputRef = useRef<HTMLInputElement | null>(null);
   const [showMethodChangeWarning, setShowMethodChangeWarning] = useState(false);
   const [pendingMethodChange, setPendingMethodChange] = useState<'file' | 'code' | null>(null);
-  const [isDragActive, setIsDragActive] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isDragActive, setIsDragActive] = useState(false);
 
   // Add the reset function here so it can access state and props
   const resetUpdateModalState = () => {
@@ -211,7 +214,7 @@ export default function ReactRenderer({
       
       // Handle destructured imports from lucide-react first
       const lucideImportRegex = /import\s*\{([^}]+)\}\s*from\s*['"`]lucide-react['"`];?\s*/g;
-      let lucideIcons: string[] = [];
+      const lucideIcons: string[] = [];
       let match;
       
       while ((match = lucideImportRegex.exec(transformedCode)) !== null) {
@@ -221,7 +224,7 @@ export default function ReactRenderer({
 
       // Handle destructured imports from react
       const reactImportRegex = /import\s+React,?\s*\{([^}]+)\}\s*from\s*['"`]react['"`];?\s*/g;
-      let reactComponents: string[] = [];
+      const reactComponents: string[] = [];
       
       while ((match = reactImportRegex.exec(transformedCode)) !== null) {
         const imports = match[1].split(',').map(imp => imp.trim());
@@ -327,7 +330,8 @@ export default function ReactRenderer({
     if ((!features.showTestingSection || mode === 'fullScreen') && features.showLivePreview) {
       generateLivePreview();
     }
-  }, [features.showTestingSection, features.showLivePreview, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [features.showTestingSection, features.showLivePreview, mode, code, filename]);
 
   // If in fullScreen mode, only render the live preview
   if (mode === 'fullScreen') {
@@ -429,7 +433,7 @@ export default function ReactRenderer({
             {/* Modal Body */}
             <div className="p-6">
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete <span className="font-medium text-gray-800">"{componentTitle || componentName}"</span>? This action cannot be undone.
+                Are you sure you want to delete <span className="font-medium text-gray-800">&quot;{componentTitle || componentName}&quot;</span>? This action cannot be undone.
               </p>
               <div className="flex justify-center space-x-3">
                 <button

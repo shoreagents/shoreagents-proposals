@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, Suspense, lazy } from 'react';
-import { Search, Code, FileX, Upload } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Search } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { LottieRefCurrentProps } from 'lottie-react';
-import { useRouter } from 'next/navigation';
+
 
 // Lazy load Lottie component
 const Lottie = dynamic(() => import('lottie-react'), {
@@ -38,12 +38,27 @@ interface UploadedComponent {
   type?: string;
 }
 
+interface LottieAnimationData {
+  v: string;
+  fr: number;
+  ip: number;
+  op: number;
+  w: number;
+  h: number;
+  nm: string;
+  ddd: number;
+  assets: unknown[];
+  layers: unknown[];
+}
+
 // Constants for pagination
 const ITEMS_PER_PAGE = 9;
 
 export default function Home() {
   const [uploadedComponents, setUploadedComponents] = useState<UploadedComponent[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isUploading, setIsUploading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
@@ -52,16 +67,18 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedUploadType, setSelectedUploadType] = useState<'react' | 'html' | null>(null);
-  const [reactAnimation, setReactAnimation] = useState<any>(null);
-  const [htmlAnimation, setHtmlAnimation] = useState<any>(null);
+  const [reactAnimation, setReactAnimation] = useState<LottieAnimationData | null>(null);
+  const [htmlAnimation, setHtmlAnimation] = useState<LottieAnimationData | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isHtmlHovering, setIsHtmlHovering] = useState(false);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   const htmlLottieRef = useRef<LottieRefCurrentProps>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_isAddModalOpen, _setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'html' | 'react'>('all');
-  const [page, setPage] = useState(1);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -72,7 +89,7 @@ export default function Home() {
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const router = useRouter();
+
 
   // Fetch components with pagination and filtering
   const fetchComponents = async (pageNum: number, search: string, tab: string) => {
@@ -202,15 +219,6 @@ export default function Home() {
   }, [isModalOpen]);
 
   // Reset modal state when opening/closing
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-    setSelectedUploadType(null);
-    setUploadTitle('');
-    setCustomUrl('');
-    setSelectedFile(null);
-    setErrors({});
-    setUploadStatus('');
-  };
 
   const resetModalState = () => {
     setSelectedUploadType(null);
@@ -1131,7 +1139,7 @@ export default function Home() {
                   </div>
                   <p className="text-gray-500 text-lg mb-2">No proposals yet</p>
                   <p className="text-gray-400 text-sm mb-6">
-                    Click "Add New Proposal" to upload your first TSX proposal
+                    Click &quot;Add New Proposal&quot; to upload your first TSX proposal
                   </p>
                 </div>
               ) : (
@@ -1140,7 +1148,8 @@ export default function Home() {
                   {filteredComponents.map((component, index) => {
                     const isHtml = component.filename.toLowerCase().endsWith('.html');
                     const hoverColor = isHtml ? 'blue' : 'purple';
-                    const previewUrl = component.customUrl || component.filename;
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    const _previewUrl = component.customUrl || component.filename;
                     return (
                       <Link
                         key={`${component.filename}-${index}`}
