@@ -5,6 +5,8 @@ import { Search } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { LottieRefCurrentProps } from 'lottie-react';
+import LogoutButton from '@/components/LogoutButton';
+import UserInfo from '@/components/UserInfo';
 
 
 // Lazy load Lottie component
@@ -414,6 +416,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header with User Info and Logout */}
+        <div className="flex justify-between items-center mb-8">
+          <UserInfo />
+          <LogoutButton />
+        </div>
         {/* Upload Modal */}
         {isModalOpen && (
           <div 
