@@ -404,7 +404,7 @@ export default function ReactRenderer({
       // Create the component factory function with dynamic packages
       const factoryParams = ['React', 'loadedModules'];
       const factoryArgs = [
-        (React as any).default || React,
+        (React as unknown as { default?: typeof React }).default || React,
         loadedModules
       ];
       
