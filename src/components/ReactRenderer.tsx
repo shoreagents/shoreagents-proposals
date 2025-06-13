@@ -199,7 +199,7 @@ export default function ReactRenderer({
   // Function to dynamically load dependencies based on imports
   const loadDynamicDependencies = async (code: string) => {
     const detectedDeps: string[] = [];
-    const loadedModules: Record<string, any> = {};
+    const loadedModules: Record<string, unknown> = {};
 
     // Detect which supported dependencies are used
     Object.keys(DEPENDENCY_REGISTRY).forEach(dep => {
@@ -212,9 +212,9 @@ export default function ReactRenderer({
     // Load only the detected dependencies
     const loadPromises = detectedDeps.map(async (dep) => {
       try {
-        const module = await DEPENDENCY_REGISTRY[dep as SupportedDependency]();
-        loadedModules[dep] = module;
-        return { dep, module, success: true };
+        const moduleExports = await DEPENDENCY_REGISTRY[dep as SupportedDependency]();
+        loadedModules[dep] = moduleExports;
+        return { dep, module: moduleExports, success: true };
       } catch (error) {
         console.warn(`Failed to load ${dep}:`, error);
         return { dep, module: null, success: false };
@@ -404,7 +404,7 @@ export default function ReactRenderer({
       // Create the component factory function with dynamic packages
       const factoryParams = ['React', 'loadedModules'];
       const factoryArgs = [
-        React.default || React,
+        (React as any).default || React,
         loadedModules
       ];
       
