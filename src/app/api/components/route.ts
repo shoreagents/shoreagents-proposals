@@ -4,8 +4,6 @@ import { fetchProposals } from '@/lib/proposalsApi';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '9');
     const search = searchParams.get('search') || '';
     const type = searchParams.get('type') || '';
 
@@ -30,13 +28,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedProposals = filteredProposals.slice(startIndex, endIndex);
-    
     // Transform data to match expected frontend format
-    const components = paginatedProposals.map(proposal => ({
+    const components = filteredProposals.map(proposal => ({
       name: proposal.title,
       filename: proposal.filename,
       uploadDate: proposal.created_at,
@@ -45,14 +38,9 @@ export async function GET(request: NextRequest) {
       type: proposal.type
     }));
 
-    const hasMore = endIndex < filteredProposals.length;
-
     return NextResponse.json({
       components,
-      hasMore,
-      total: filteredProposals.length,
-      page,
-      limit
+      total: filteredProposals.length
     });
 
   } catch (error) {

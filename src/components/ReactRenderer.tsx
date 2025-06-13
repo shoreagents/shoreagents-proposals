@@ -36,6 +36,25 @@ interface DependencyInfo {
   likely_missing: boolean;
 }
 
+// Dynamic dependency registry - only loads what's needed
+const DEPENDENCY_REGISTRY = {
+  'react': () => import('react'),
+  'lucide-react': () => import('lucide-react'),
+  'recharts': () => import('recharts'),
+  'chart.js': () => import('chart.js'),
+  'd3': () => import('d3'),
+  'three': () => import('three'),
+  'mathjs': () => import('mathjs'),
+  'papaparse': () => import('papaparse'),
+  'xlsx': () => import('xlsx'),
+  'tone': () => import('tone'),
+  'tensorflow': () => import('@tensorflow/tfjs'),
+  'mammoth': () => import('mammoth'),
+  // Add more as needed
+} as const;
+
+type SupportedDependency = keyof typeof DEPENDENCY_REGISTRY;
+
 // Error Boundary Component for Live Preview
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -141,9 +160,8 @@ export default function ReactRenderer({
 
     // Common packages that are usually installed in Next.js projects
     const commonPackages = [
-      'react', 'react-dom', 'next', '@types/react', '@types/node',
-      'typescript', 'tailwindcss', 'eslint',
-      'lucide-react'
+      'react', 'lucide-react', 'recharts', 'chart.js', 'd3',
+      'three', 'mathjs', 'papaparse', 'xlsx', 'tone', 'tensorflow', 'mammoth'
     ];
 
     while ((match = importRegex.exec(code)) !== null) {
@@ -178,6 +196,41 @@ export default function ReactRenderer({
   const missingDependencies = dependencies.filter(dep => dep.likely_missing);
   const safeDependencies = dependencies.filter(dep => !dep.likely_missing);
 
+  // Function to dynamically load dependencies based on imports
+  const loadDynamicDependencies = async (code: string) => {
+    const detectedDeps: string[] = [];
+    const loadedModules: Record<string, any> = {};
+
+    // Detect which supported dependencies are used
+    Object.keys(DEPENDENCY_REGISTRY).forEach(dep => {
+      const importRegex = new RegExp(`from\\s+['"\`]${dep}['"\`]`, 'g');
+      if (importRegex.test(code)) {
+        detectedDeps.push(dep);
+      }
+    });
+
+    // Load only the detected dependencies
+    const loadPromises = detectedDeps.map(async (dep) => {
+      try {
+        const module = await DEPENDENCY_REGISTRY[dep as SupportedDependency]();
+        loadedModules[dep] = module;
+        return { dep, module, success: true };
+      } catch (error) {
+        console.warn(`Failed to load ${dep}:`, error);
+        return { dep, module: null, success: false };
+      }
+    });
+
+    const results = await Promise.all(loadPromises);
+    const failedDeps = results.filter(r => !r.success).map(r => r.dep);
+    
+    if (failedDeps.length > 0) {
+      throw new Error(`Failed to load dependencies: ${failedDeps.join(', ')}`);
+    }
+
+    return loadedModules;
+  };
+
   // Live preview functionality
   const generateLivePreview = async () => {
     if (missingDependencies.length > 0) {
@@ -203,32 +256,71 @@ export default function ReactRenderer({
         throw new Error('Failed to transform component code');
       }
 
-      // Load all available dependencies in parallel
-      const [
-        React,
-        LucideReact,
-      ] = await Promise.all([
-        import('react'),
-        import('lucide-react'),
-      ]);
+      // Load dependencies dynamically based on imports
+      const loadedModules = await loadDynamicDependencies(transformedCode);
       
-      // Handle destructured imports from lucide-react first
-      const lucideImportRegex = /import\s*\{([^}]+)\}\s*from\s*['"`]lucide-react['"`];?\s*/g;
-      const lucideIcons: string[] = [];
-      let match;
+      // Always ensure React is available
+      const React = loadedModules['react'] || await import('react');
       
-      while ((match = lucideImportRegex.exec(transformedCode)) !== null) {
-        const imports = match[1].split(',').map(imp => imp.trim());
-        lucideIcons.push(...imports);
+      // Only load ReactDOM if createPortal is used
+      let ReactDOM = null;
+      const needsReactDOM = /createPortal/.test(transformedCode);
+      if (needsReactDOM) {
+        ReactDOM = await import('react-dom');
       }
-
-      // Handle destructured imports from react
-      const reactImportRegex = /import\s+React,?\s*\{([^}]+)\}\s*from\s*['"`]react['"`];?\s*/g;
-      const reactComponents: string[] = [];
       
+      // Handle different import patterns
+      const packageImports: Record<string, string[]> = {};
+      const namespaceImports: Record<string, string> = {};
+      const defaultImports: Record<string, string> = {};
+      
+      // Extract imports for each loaded package
+      Object.keys(loadedModules).forEach(packageName => {
+        // 1. Named/Destructured imports: import { Component1, Component2 } from 'package'
+        const namedImportRegex = new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*['"\`]${packageName}['"\`];?\\s*`, 'g');
+        let match;
+        while ((match = namedImportRegex.exec(transformedCode)) !== null) {
+          const imports = match[1].split(',').map(imp => imp.trim());
+          // Merge with existing imports, avoiding duplicates
+          const existingImports = packageImports[packageName] || [];
+          const newImports = imports.filter(imp => !existingImports.includes(imp));
+          packageImports[packageName] = existingImports.concat(newImports);
+        }
+
+        // 2. Namespace imports: import * as Package from 'package'
+        const namespaceImportRegex = new RegExp(`import\\s*\\*\\s*as\\s+(\\w+)\\s*from\\s*['"\`]${packageName}['"\`];?\\s*`, 'g');
+        while ((match = namespaceImportRegex.exec(transformedCode)) !== null) {
+          namespaceImports[packageName] = match[1];
+        }
+
+        // 3. Default imports: import Package from 'package'
+        const defaultImportRegex = new RegExp(`import\\s+(\\w+)\\s*from\\s*['"\`]${packageName}['"\`];?\\s*`, 'g');
+        while ((match = defaultImportRegex.exec(transformedCode)) !== null) {
+          defaultImports[packageName] = match[1];
+        }
+
+        // 4. Mixed imports: import Package, { Component1, Component2 } from 'package'
+        const mixedImportRegex = new RegExp(`import\\s+(\\w+)\\s*,\\s*\\{([^}]+)\\}\\s*from\\s*['"\`]${packageName}['"\`];?\\s*`, 'g');
+        while ((match = mixedImportRegex.exec(transformedCode)) !== null) {
+          defaultImports[packageName] = match[1];
+          const imports = match[2].split(',').map(imp => imp.trim());
+          // Merge with existing imports, avoiding duplicates
+          const existingImports = packageImports[packageName] || [];
+          const newImports = imports.filter(imp => !existingImports.includes(imp));
+          packageImports[packageName] = existingImports.concat(newImports);
+        }
+      });
+
+      // Handle React imports specifically (common patterns)
+      const reactImportRegex = /import\s+React,?\s*\{([^}]+)\}\s*from\s*['"`]react['"`];?\s*/g;
+      let match;
       while ((match = reactImportRegex.exec(transformedCode)) !== null) {
+        defaultImports['react'] = 'React';
         const imports = match[1].split(',').map(imp => imp.trim());
-        reactComponents.push(...imports);
+        // Merge with existing imports, avoiding duplicates
+        const existingImports = packageImports['react'] || [];
+        const newImports = imports.filter(imp => !existingImports.includes(imp));
+        packageImports['react'] = existingImports.concat(newImports);
       }
 
       // Remove ALL import statements and export statements
@@ -247,42 +339,88 @@ export default function ReactRenderer({
         .replace(/^\s*;+\s*/g, '')
         .trim();
 
-      // Add destructured lucide icons as const declarations at the top
-      if (lucideIcons.length > 0) {
-        const iconDeclarations = lucideIcons.map(icon => 
-          `const ${icon} = LucideReact.${icon};`
-        ).join('\n');
-        modifiedCode = iconDeclarations + '\n\n' + modifiedCode;
-      }
+      // Add all import declarations as const declarations at the top
+      let declarationsCode = '';
+      const declaredVariables = new Set<string>(); // Track declared variables to avoid duplicates
+      
+      // 1. Handle namespace imports: import * as Package from 'package'
+      Object.entries(namespaceImports).forEach(([packageName, aliasName]) => {
+        const packageModule = loadedModules[packageName];
+        if (packageModule && !declaredVariables.has(aliasName)) {
+          declarationsCode += `const ${aliasName} = loadedModules['${packageName}'];\n`;
+          declaredVariables.add(aliasName);
+        }
+      });
 
-      // Add destructured React components as const declarations
-      if (reactComponents.length > 0) {
-        const reactDeclarations = reactComponents.map(component => {
-          // Special case for createPortal which comes from react-dom
-          if (component === 'createPortal') {
-            return `const ${component} = ReactDOM.createPortal;`;
+      // 2. Handle default imports: import Package from 'package'
+      Object.entries(defaultImports).forEach(([packageName, aliasName]) => {
+        const packageModule = loadedModules[packageName];
+        if (packageModule && !namespaceImports[packageName] && !declaredVariables.has(aliasName)) {
+          if (packageName === 'react' && aliasName === 'React') {
+            // React is already available in the factory function scope, skip declaration
+            declaredVariables.add(aliasName);
+          } else if (packageName === 'react') {
+            declarationsCode += `const ${aliasName} = React;\n`;
+            declaredVariables.add(aliasName);
+          } else {
+            declarationsCode += `const ${aliasName} = loadedModules['${packageName}'].default || loadedModules['${packageName}'];\n`;
+            declaredVariables.add(aliasName);
           }
-          return `const ${component} = React.${component};`;
-        }).join('\n');
-        modifiedCode = reactDeclarations + '\n\n' + modifiedCode;
+        }
+      });
+
+      // 3. Handle named/destructured imports: import { Component1, Component2 } from 'package'
+      Object.entries(packageImports).forEach(([packageName, imports]) => {
+        if (imports.length > 0) {
+          const packageModule = loadedModules[packageName];
+          if (packageModule) {
+            const declarations = imports
+              .filter((importName: string) => !declaredVariables.has(importName))
+              .map((importName: string) => {
+                declaredVariables.add(importName);
+                // Special handling for different packages
+                if (packageName === 'react' && importName === 'createPortal') {
+                  return `const ${importName} = ReactDOM.createPortal;`;
+                } else if (packageName === 'react') {
+                  return `const ${importName} = React.${importName};`;
+                } else if (packageName === 'lucide-react') {
+                  return `const ${importName} = loadedModules['lucide-react'].${importName};`;
+                } else {
+                  // For other packages, try to access the named export
+                  return `const ${importName} = loadedModules['${packageName}'].${importName} || loadedModules['${packageName}'].default?.${importName};`;
+                }
+              });
+            if (declarations.length > 0) {
+              declarationsCode += declarations.join('\n') + '\n';
+            }
+          }
+        }
+      });
+      
+      if (declarationsCode) {
+        modifiedCode = declarationsCode + '\n' + modifiedCode;
       }
 
-      // Create the component factory function with full packages
+      // Create the component factory function with dynamic packages
+      const factoryParams = ['React', 'loadedModules'];
+      const factoryArgs = [
+        React.default || React,
+        loadedModules
+      ];
+      
+      // Add ReactDOM only if it was loaded
+      if (ReactDOM) {
+        factoryParams.push('ReactDOM');
+        factoryArgs.push(ReactDOM);
+      }
+      
       const componentFactory = new Function(
-        'React',
-        'ReactDOM',
-        'LucideReact',
+        ...factoryParams,
         modifiedCode
       );
       
       // Execute the factory to get the component  
-      const ReactModule = React.default || React;
-      const ReactDOMModule = await import('react-dom');
-      const component = componentFactory(
-        ReactModule,
-        ReactDOMModule,
-        LucideReact
-      );
+      const component = componentFactory(...factoryArgs);
       
       if (component) {
         setLiveComponent(() => component);

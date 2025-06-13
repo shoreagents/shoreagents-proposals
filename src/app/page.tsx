@@ -52,7 +52,7 @@ interface LottieAnimationData {
 }
 
 // Constants for pagination
-const ITEMS_PER_PAGE = 9;
+// const ITEMS_PER_PAGE = 9; // Removed pagination
 
 export default function Home() {
   const [uploadedComponents, setUploadedComponents] = useState<UploadedComponent[]>([]);
@@ -77,11 +77,6 @@ export default function Home() {
   const [_isAddModalOpen, _setIsAddModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'html' | 'react'>('all');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const observerTarget = useRef<HTMLDivElement>(null);
   const [inputMethod, setInputMethod] = useState<'file' | 'code'>('code');
   const [codeContent, setCodeContent] = useState('');
   const [showMethodChangeWarning, setShowMethodChangeWarning] = useState(false);
@@ -91,12 +86,10 @@ export default function Home() {
 
 
 
-  // Fetch components with pagination and filtering
-  const fetchComponents = async (pageNum: number, search: string, tab: string) => {
+  // Fetch components with filtering (no pagination)
+  const fetchComponents = async (search: string, tab: string) => {
     try {
       const queryParams = new URLSearchParams({
-        page: pageNum.toString(),
-        limit: ITEMS_PER_PAGE.toString(),
         search: search,
         type: tab === 'all' ? '' : tab
       });
@@ -105,13 +98,7 @@ export default function Home() {
       if (!response.ok) throw new Error('Failed to fetch components');
       const data = await response.json();
       
-      if (pageNum === 1) {
-        setUploadedComponents(data.components);
-      } else {
-        setUploadedComponents(prev => [...prev, ...data.components]);
-      }
-      
-      setHasMore(data.hasMore);
+      setUploadedComponents(data.components);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching components:', error);
@@ -121,39 +108,13 @@ export default function Home() {
 
   // Initial load
   useEffect(() => {
-    fetchComponents(1, searchQuery, activeTab);
+    fetchComponents(searchQuery, activeTab);
   }, [searchQuery, activeTab]);
-
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-          setIsLoadingMore(true);
-          setPage(prev => {
-            const nextPage = prev + 1;
-            fetchComponents(nextPage, searchQuery, activeTab).finally(() => {
-              setIsLoadingMore(false);
-            });
-            return nextPage;
-          });
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, searchQuery, activeTab]);
 
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      setPage(1);
-      fetchComponents(1, searchQuery, activeTab);
+      fetchComponents(searchQuery, activeTab);
     }, 300);
 
     return () => clearTimeout(timer);
@@ -339,8 +300,7 @@ export default function Home() {
       }
 
       // Refresh the components list
-      setPage(1);
-      fetchComponents(1, searchQuery, activeTab);
+      fetchComponents(searchQuery, activeTab);
 
       // Reset form and close modal
       setIsModalOpen(false);
@@ -424,8 +384,7 @@ export default function Home() {
       }
 
       // Refresh the components list
-      setPage(1);
-      fetchComponents(1, searchQuery, activeTab);
+      fetchComponents(searchQuery, activeTab);
 
       // Reset form and close modal immediately
       setIsModalOpen(false);
