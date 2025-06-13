@@ -6,6 +6,7 @@ import ReactRenderer from '@/components/ReactRenderer';
 import HtmlRenderer from '@/components/HtmlRenderer';
 import React from 'react';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface PreviewPageProps {
   params: Promise<{
@@ -29,6 +30,14 @@ interface ComponentData {
 }
 
 export default function PreviewPage({ params }: PreviewPageProps) {
+  return (
+    <ProtectedRoute>
+      <PreviewPageContent params={params} />
+    </ProtectedRoute>
+  );
+}
+
+function PreviewPageContent({ params }: PreviewPageProps) {
   const router = useRouter();
   const [fileContent, setFileContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);

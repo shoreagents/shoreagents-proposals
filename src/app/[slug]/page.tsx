@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import HtmlRenderer from "@/components/HtmlRenderer";
 import ReactRenderer from "@/components/ReactRenderer";
-
 interface ComponentPageProps {
   params: Promise<{
     slug: string;
@@ -137,4 +136,4 @@ export default function ComponentPage({ params }: ComponentPageProps) {
       )}
     </div>
   );
-} 
+}

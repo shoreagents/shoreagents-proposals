@@ -5,8 +5,7 @@ import { Search } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { LottieRefCurrentProps } from 'lottie-react';
-import LogoutButton from '@/components/LogoutButton';
-import UserInfo from '@/components/UserInfo';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 
 // Lazy load Lottie component
@@ -100,7 +99,7 @@ export default function Home() {
       if (!response.ok) throw new Error('Failed to fetch components');
       const data = await response.json();
       
-      setUploadedComponents(data.components);
+        setUploadedComponents(data.components);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching components:', error);
@@ -414,13 +413,9 @@ export default function Home() {
   const isHtmlUpload = (type: 'react' | 'html' | null): type is 'html' => type === 'html';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header with User Info and Logout */}
-        <div className="flex justify-between items-center mb-8">
-          <UserInfo />
-          <LogoutButton />
-        </div>
         {/* Upload Modal */}
         {isModalOpen && (
           <div 
@@ -975,12 +970,7 @@ export default function Home() {
         {/* Uploaded Components List */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              {isLoading ? (
-                <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
-              ) : (
-                <h2 className="text-2xl font-semibold text-gray-800">Proposals</h2>
-              )}
+            <div className="flex items-center justify-end mb-6">
               <span className="text-sm text-gray-500">
                 {isLoading ? (
                   <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
@@ -1145,5 +1135,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

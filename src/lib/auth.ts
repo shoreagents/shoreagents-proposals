@@ -1,23 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createBrowserClient } from '@supabase/ssr';
 
-export async function getUser() {
-  const supabase = await createClient()
-  
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    return user
-  } catch (error) {
-    console.error('Error:', error)
-    return null
-  }
-}
-
-export async function requireAuth() {
-  const user = await getUser()
-  
-  if (!user) {
-    throw new Error('Authentication required')
-  }
-  
-  return user
-} 
+// Client-side auth helper
+export const createClient = () => {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}; 

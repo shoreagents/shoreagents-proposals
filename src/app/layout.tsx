@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "ShoreAgents Proposals",
@@ -17,7 +19,10 @@ export default function RootLayout({
         <meta name="robots" content="noindex, nofollow, noarchive, nocache, nosnippet, noimageindex, nocover, nocrawl" />
       </head>
       <body className="antialiased">
-        {children}
+        <AuthProvider>
+          <Header />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
