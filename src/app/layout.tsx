@@ -6,6 +6,9 @@ import Header from "@/components/Header";
 export const metadata: Metadata = {
   title: "ShoreAgents Proposals",
   description: "ShoreAgents Proposals",
+  icons: {
+    icon: '/favicon.webp',
+  },
 };
 
 export default function RootLayout({
