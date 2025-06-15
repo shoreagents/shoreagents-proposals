@@ -968,7 +968,7 @@ export default function Home() {
         )}
 
         {/* Uploaded Components List */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-500 overflow-hidden">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-800">Proposals</h2>

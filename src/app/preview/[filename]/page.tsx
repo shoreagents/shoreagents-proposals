@@ -149,7 +149,7 @@ function PreviewPageContent({ params }: PreviewPageProps) {
 
         {/* Content Skeleton */}
         <div className="max-w-6xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-500 overflow-hidden">
             <div className="p-6 space-y-4">
               {/* Proposal Details Skeleton */}
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 relative">
@@ -273,7 +273,7 @@ function PreviewPageContent({ params }: PreviewPageProps) {
 
       {/* File Preview */}
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-500 overflow-hidden">
           <div className="p-6">
             {fileType === 'html' ? (
               <HtmlRenderer 

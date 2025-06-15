@@ -25,3 +25,58 @@
   position: fixed !important;
   z-index: 9999 !important;
 }
+
+/* Supabase Auth Input Styles - Target signin page specifically */
+.signin-page input[type="email"],
+.signin-page input[type="password"],
+.signin-page input {
+  transition: all 0.2s ease !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  font-size: 16px !important;
+  background-color: #ffffff !important;
+}
+
+.signin-page input[type="email"]:focus,
+.signin-page input[type="password"]:focus,
+.signin-page input:focus {
+  border-color: #6b7280 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  ring: none !important;
+}
+
+/* Supabase Auth Button Styles - Target signin page specifically */
+.signin-page button[type="submit"],
+.signin-page button {
+  background-color: #ffffff !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 12px !important;
+  padding: 8px 24px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  margin-top: 24px !important;
+}
+
+.signin-page button[type="submit"]:hover,
+.signin-page button:hover {
+  background-color: #f9fafb !important;
+}
+
+/* Supabase Auth Error Message Styles - Match modal error styling */
+.signin-page [data-supabase] .supabase-auth-ui_ui-message,
+.signin-page .supabase-auth-ui_ui-message,
+.signin-page [role="alert"],
+.signin-page .supabase-auth-ui_ui-message--error {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-top: 4px !important;
+  font-size: 12px !important;
+  color: #ef4444 !important;
+  font-weight: normal !important;
+}
