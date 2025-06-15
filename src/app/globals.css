@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+/* Live Preview Isolation Styles */
+.preview-isolated-container {
+  /* Ensure interactive elements work properly */
+  cursor: auto;
+}
+
+.preview-isolated-container button,
+.preview-isolated-container a,
+.preview-isolated-container [role="button"] {
+  cursor: pointer !important;
+}
+
+/* Reset any potential inherited Tailwind utilities within preview */
+.preview-isolated-container * {
+  /* Allow Tailwind classes to work within the preview */
+  box-sizing: border-box;
+}
+
+/* Prevent parent styles from affecting preview modals/dropdowns */
+.preview-isolated-container [data-radix-portal],
+.preview-isolated-container .fixed,
+.preview-isolated-container [style*="position: fixed"] {
+  position: fixed !important;
+  z-index: 9999 !important;
+}

@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Eye, EyeOff, Download, Code, Code2, Trash2, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import IframePreview from './IframePreview';
 
 interface ReactRendererProps {
   code: string;
@@ -122,7 +123,7 @@ export default function ReactRenderer({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const router = useRouter();
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLIFrameElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_isLoading, _setIsLoading] = useState(true);
   const [updateTitle, setUpdateTitle] = useState(componentTitle || title);
@@ -471,7 +472,7 @@ export default function ReactRenderer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [features.showTestingSection, features.showLivePreview, mode, code, filename]);
 
-  // If in fullScreen mode, only render the live preview
+  // If in fullScreen mode, only render the live preview with isolation
   if (mode === 'fullScreen') {
     return (
       <div className="w-full h-full">
@@ -480,11 +481,13 @@ export default function ReactRenderer({
             <div className="text-red-800 text-sm font-mono whitespace-pre-wrap">{previewError}</div>
           </div>
         ) : liveComponent ? (
-          <div className="w-full h-full [&_button]:cursor-pointer [&_a]:cursor-pointer [&_[role=button]]:cursor-pointer">
-            <ErrorBoundary>
-              {React.createElement(liveComponent)}
-            </ErrorBoundary>
-          </div>
+          <IframePreview 
+            component={liveComponent}
+            minHeight={400}
+            maxHeight={2000}
+            autoHeight={false}
+            onError={(error) => setPreviewError(error)}
+          />
         ) : null}
       </div>
     );
@@ -752,27 +755,23 @@ export default function ReactRenderer({
       {showLivePreview && features.showLivePreview && (
         <div className="space-y-2">
           <h4 className="font-semibold text-gray-800">Live Preview</h4>
-          <div className="relative bg-white border-2 border-dashed border-gray-300 rounded-xl overflow-hidden">
-            {/* Preview Container with proper stacking context */}
-            <div className="relative isolate" style={{ 
-              minHeight: '200px',
-              transform: 'translate3d(0,0,0)', // Creates stacking context
-              contain: 'paint', // Contains fixed elements
-              overflow: 'hidden' // Ensures fixed elements don't escape
-            }}>
+          <div className="relative bg-white border-2 border-dashed border-gray-300 overflow-hidden">
+            {/* Preview Container with iframe isolation */}
+            <div className="relative bg-white" style={{ minHeight: '200px' }}>
               {previewError ? (
                 <div className="absolute inset-0 bg-red-50/80 backdrop-blur-sm flex items-center justify-center p-4">
                   <div className="text-red-800 text-sm font-mono whitespace-pre-wrap">{previewError}</div>
                 </div>
               ) : liveComponent ? (
-                <div 
-                  ref={previewRef} 
-                  className="w-full h-full min-h-[200px] p-1 [&_button]:cursor-pointer [&_a]:cursor-pointer [&_[role=button]]:cursor-pointer"
-                >
-                  <ErrorBoundary>
-                    {React.createElement(liveComponent)}
-                  </ErrorBoundary>
-                </div>
+                <IframePreview 
+                  component={liveComponent}
+                  ref={previewRef}
+                  minHeight={300}
+                  maxHeight={1000}
+                  autoHeight={true}
+                  smoothTransition={false}
+                  onError={(error) => setPreviewError(error)}
+                />
               ) : null}
             </div>
           </div>
