@@ -21,9 +21,8 @@ const IframePreview = forwardRef<HTMLIFrameElement, IframePreviewProps>(({
   smoothTransition = false
 }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isReady, setIsReady] = useState(false);
   const [iframeHeight, setIframeHeight] = useState(autoHeight ? Math.max(minHeight, 400) : minHeight);
-  const rootRef = useRef<any>(null);
+  const rootRef = useRef<ReturnType<typeof createRoot> | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
   useImperativeHandle(ref, () => iframeRef.current!);
@@ -142,8 +141,6 @@ const IframePreview = forwardRef<HTMLIFrameElement, IframePreviewProps>(({
             if (autoHeight) {
               iframe.contentWindow?.addEventListener('resize', adjustHeight);
             }
-            
-            setIsReady(true);
           }
         };
 
@@ -167,7 +164,7 @@ const IframePreview = forwardRef<HTMLIFrameElement, IframePreviewProps>(({
         resizeObserverRef.current = null;
       }
     };
-  }, [component, onError]);
+  }, [component, onError, autoHeight, minHeight, maxHeight]);
 
   return (
     <iframe

@@ -56,39 +56,7 @@ const DEPENDENCY_REGISTRY = {
 
 type SupportedDependency = keyof typeof DEPENDENCY_REGISTRY;
 
-// Error Boundary Component for Live Preview
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: string }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: '' };
-  }
 
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error: error.message };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Live preview render error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <h3 className="text-red-800 font-semibold mb-2">Render Error</h3>
-          <p className="text-red-700 text-sm">
-            {this.state.error}
-          </p>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 export default function ReactRenderer({ 
   code, 
