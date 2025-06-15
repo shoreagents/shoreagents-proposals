@@ -50,9 +50,9 @@
 /* Supabase Auth Button Styles - Target signin page specifically */
 .signin-page button[type="submit"],
 .signin-page button {
-  background-color: #ffffff !important;
-  color: #374151 !important;
-  border: 1px solid #d1d5db !important;
+  background-color: #7EAC0B !important;
+  color: #ffffff !important;
+  border: 1px solid #7EAC0B !important;
   border-radius: 12px !important;
   padding: 8px 24px !important;
   font-weight: 500 !important;
@@ -64,7 +64,7 @@
 
 .signin-page button[type="submit"]:hover,
 .signin-page button:hover {
-  background-color: #f9fafb !important;
+  background-color: #97BC34 !important;
 }
 
 /* Supabase Auth Error Message Styles - Match modal error styling */

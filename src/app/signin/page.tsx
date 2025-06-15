@@ -67,9 +67,9 @@ export default function SignIn() {
               variables: {
                 default: {
                   colors: {
-                                            brand: '#ffffff',
-                        brandAccent: '#f9fafb',
-                        brandButtonText: '#374151',
+                                            brand: '#7EAC0B',
+                        brandAccent: '#97BC34',
+                        brandButtonText: '#ffffff',
                         inputBackground: '#ffffff',
                         inputBorder: '#d1d5db',
                         inputBorderFocus: '#6b7280',
@@ -99,14 +99,14 @@ export default function SignIn() {
               },
               style: {
                                     button: {
-                      background: '#ffffff',
-                      color: '#374151',
+                      background: '#7EAC0B',
+                      color: '#ffffff',
                       borderRadius: '12px',
                       padding: '8px 24px',
                       fontWeight: '500',
                       fontSize: '14px',
                       transition: 'all 0.2s ease',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid #7EAC0B',
                       cursor: 'pointer',
                     },
                                     input: {
