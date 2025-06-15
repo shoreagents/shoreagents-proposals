@@ -970,7 +970,8 @@ export default function Home() {
         {/* Uploaded Components List */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="p-6">
-            <div className="flex items-center justify-end mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-800">Proposals</h2>
               <span className="text-sm text-gray-500">
                 {isLoading ? (
                   <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
